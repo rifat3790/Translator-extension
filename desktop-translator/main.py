@@ -6,6 +6,29 @@ Works across WhatsApp Desktop, Telegram Desktop, Word, Notepad, Discord, etc.
 
 import sys
 import os
+
+if sys.stdout is None:
+    try:
+        sys.stdout = open(os.devnull, 'w', encoding='utf-8')
+    except Exception:
+        pass
+else:
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
+if sys.stderr is None:
+    try:
+        sys.stderr = open(os.devnull, 'w', encoding='utf-8')
+    except Exception:
+        pass
+else:
+    try:
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 import time
 import json
 import ctypes
@@ -243,15 +266,15 @@ def main():
     load_tone()
     
     print("=" * 60)
-    print(" 🌐 Chat Translator AI - Windows Global Desktop Assistant")
+    print(" [Chat Translator AI] - Windows Global Desktop Assistant")
     print(" Developed by Md. Rifayet Hossen (Rifat) - Shopify Developer")
     print("=" * 60)
     print(" Hotkeys Active:")
-    print("   • Ctrl + Space      : Outgoing Banglish/Bengali -> English (Auto-replace)")
-    print("   • Alt + T           : Outgoing Banglish/Bengali -> English (Auto-replace)")
-    print("   • Ctrl+Shift+Space  : Outgoing Banglish/Bengali -> English (Auto-replace)")
-    print("   • Alt + B           : Incoming English -> Bengali (বাংলা Floating Card)")
-    print("   • Ctrl+Shift+B      : Incoming English -> Bengali (বাংলা Floating Card)")
+    print("   * Ctrl + Space      : Outgoing Banglish/Bengali -> English (Auto-replace)")
+    print("   * Alt + T           : Outgoing Banglish/Bengali -> English (Auto-replace)")
+    print("   * Ctrl+Shift+Space  : Outgoing Banglish/Bengali -> English (Auto-replace)")
+    print("   * Alt + B           : Incoming English -> Bengali (Bangla Floating Card)")
+    print("   * Ctrl+Shift+B      : Incoming English -> Bengali (Bangla Floating Card)")
     print("=" * 60)
     print(" Running silently in the background / system tray...")
 
