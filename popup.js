@@ -1,7 +1,7 @@
-// Chat Translator Popup Script
+// Chat Translator Popup Script (with ChatGPT-Style AI Chat Assistant)
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Switching
+  // ----------------- TAB SWITCHING -----------------
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Tone Chips
+  // ----------------- QUICK TRANSLATOR TAB -----------------
   let selectedTone = 'professional';
   const toneChips = document.querySelectorAll('.tone-chip');
   toneChips.forEach(chip => {
@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.classList.add('active');
       selectedTone = chip.getAttribute('data-tone');
 
-      // Update output badge
       const badge = document.getElementById('outputBadge');
       if (selectedTone === 'bangla') {
         badge.innerText = 'বাংলা (Bengali)';
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Input & Character Counter
   const inputEl = document.getElementById('inputText');
   const charCountEl = document.getElementById('charCount');
   const clearBtn = document.getElementById('clearBtn');
@@ -57,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     inputEl.focus();
   });
 
-  // Copy button
   copyBtn.addEventListener('click', () => {
     const text = outputEl.innerText;
     if (!text || text === 'Your translated message will appear here...' || text.startsWith('⏳')) return;
@@ -73,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Perform Translation inside Popup
   function doPopupTranslate() {
     const text = inputEl.value.trim();
     if (!text) return;
@@ -105,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   translateBtn.addEventListener('click', doPopupTranslate);
 
-  // Keyboard shortcut: Ctrl + Enter in textarea
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -113,19 +108,146 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Settings Tab: API Key Management
+
+  // ----------------- AI CHATBOT TAB (ChatGPT-style) -----------------
+  const chatFeed = document.getElementById('chatFeed');
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  const chatResetBtn = document.getElementById('chatResetBtn');
+  const welcomeCard = document.getElementById('chatWelcomeCard');
+
+  let chatHistory = [];
+
+  function formatAIMessage(text) {
+    // Basic formatting for bold and line breaks
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px;">$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function appendChatBubble(text, role) {
+    if (welcomeCard && welcomeCard.style.display !== 'none') {
+      welcomeCard.style.display = 'none';
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${role}`;
+
+    if (role === 'ai') {
+      bubble.innerHTML = formatAIMessage(text);
+      // Double click to copy AI response
+      bubble.title = "Click to copy";
+      bubble.style.cursor = "pointer";
+      bubble.addEventListener('click', () => {
+        navigator.clipboard.writeText(text);
+        const originalBg = bubble.style.borderColor;
+        bubble.style.borderColor = '#10b981';
+        setTimeout(() => bubble.style.borderColor = originalBg, 800);
+      });
+    } else {
+      bubble.innerText = text;
+    }
+
+    chatFeed.appendChild(bubble);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+    return bubble;
+  }
+
+  function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.id = 'chatTypingIndicator';
+    indicator.innerHTML = `
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    `;
+    chatFeed.appendChild(indicator);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  }
+
+  function hideTypingIndicator() {
+    const el = document.getElementById('chatTypingIndicator');
+    if (el) el.remove();
+  }
+
+  function sendChatMessage(userText) {
+    const text = (userText || chatInput.value).trim();
+    if (!text) return;
+
+    chatInput.value = '';
+    appendChatBubble(text, 'user');
+
+    // Add to multi-turn conversation history
+    chatHistory.push({
+      role: 'user',
+      parts: [{ text: text }]
+    });
+
+    chatSendBtn.disabled = true;
+    showTypingIndicator();
+
+    chrome.runtime.sendMessage({
+      action: "ai_chat",
+      messages: chatHistory
+    }, (response) => {
+      hideTypingIndicator();
+      chatSendBtn.disabled = false;
+      chatInput.focus();
+
+      if (response && response.success) {
+        appendChatBubble(response.text, 'ai');
+        chatHistory.push({
+          role: 'model',
+          parts: [{ text: response.text }]
+        });
+      } else {
+        appendChatBubble(`❌ Error: ${response ? response.error : 'Connection failed'}`, 'ai');
+      }
+    });
+  }
+
+  chatSendBtn.addEventListener('click', () => sendChatMessage());
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Prompt Pill click handlers
+  document.querySelectorAll('.prompt-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const promptText = pill.getAttribute('data-prompt');
+      sendChatMessage(promptText);
+    });
+  });
+
+  // Reset / Clear chat
+  chatResetBtn.addEventListener('click', () => {
+    chatHistory = [];
+    chatFeed.innerHTML = '';
+    if (welcomeCard) {
+      welcomeCard.style.display = 'block';
+      chatFeed.appendChild(welcomeCard);
+    }
+  });
+
+
+  // ----------------- SETTINGS TAB: API KEY MANAGEMENT -----------------
   const apiKeyInput = document.getElementById('apiKey');
   const toggleKeyBtn = document.getElementById('toggleKeyBtn');
   const saveKeyBtn = document.getElementById('saveKeyBtn');
 
-  // Load existing key or mask
   chrome.storage.local.get(['geminiApiKey'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
     }
   });
 
-  // Toggle Visibility
   toggleKeyBtn.addEventListener('click', () => {
     if (apiKeyInput.type === 'password') {
       apiKeyInput.type = 'text';
@@ -136,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Save Key
   saveKeyBtn.addEventListener('click', () => {
     const key = apiKeyInput.value.trim();
     chrome.storage.local.set({ geminiApiKey: key }, () => {

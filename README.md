@@ -22,16 +22,21 @@
 - Converts English, foreign languages, and even informal Banglish into clear, natural Bengali script (বাংলা লিপি).
 - **Double-click shortcut**: Double-click any message bubble to toggle its translation on the fly.
 
-### 3. 💬 Interactive In-Popup AI Assistant & Quick Translator
-- Click the extension icon to open a sleek, glassmorphic dark-mode dashboard.
-- Translate text right inside the extension with tone customization:
+### 3. 🤖 Built-in ChatGPT-Style AI Chatbot
+- Open the extension popup and switch to the **🤖 AI Chat** tab.
+- Chat naturally with an intelligent AI assistant in **English, বাংলা, or Banglish**.
+- Ask questions, brainstorm messages, draft client responses, write professional emails, or get explanations.
+- Features multi-turn conversation memory, instant prompt suggestion chips, live typing indicators, and one-click copy.
+
+### 4. 💬 Quick Translator Dashboard
+- Translate text directly inside the popup with custom tone controls:
   - 💼 **Professional**: Best for workplace, freelancing, and clients.
   - ✨ **Friendly**: Warm, conversational, polite.
   - 👔 **Formal Executive**: High-level corporate correspondence.
   - 🇧🇩 **Translate to বাংলা**: Instant natural Bengali conversion.
 - Features one-click copy (`📋 Copy`) and live character counting.
 
-### 4. ⚡ Intelligent Model Waterfall (Zero Quota Errors)
+### 5. ⚡ Intelligent Model Waterfall (Zero Quota Errors)
 - Powered by a multi-tiered AI architecture that automatically bypasses rate limits:
   1. **Primary**: `gemini-3.5-flash-lite` (Ultra-fast, fresh quota)
   2. **Secondary**: `gemini-3-flash-preview`

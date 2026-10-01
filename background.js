@@ -17,19 +17,16 @@ const MODELS = [
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "translate_incoming") {
-    // Translate incoming message (English, Banglish, or other) to natural Bengali using Gemini
     const prompt = `Translate the following chat message (which may be in English, Banglish/Latin script Bengali, or another language) into natural, fluent Bengali (বাংলা). Output ONLY the final Bengali translation in Bengali script. Do not output English or explanations or quotes:\n\n${request.text}`;
     
-    translateWithGeminiWaterfall(prompt, (geminiRes) => {
+    callGeminiWaterfall({ contents: [{ parts: [{ text: prompt }] }] }, (geminiRes) => {
       if (geminiRes && geminiRes.success) {
         sendResponse(geminiRes);
       } else {
-        // Fallback to Google Translate if Gemini models are all busy
         fallbackGoogleTranslate(request.text, 'bn', sendResponse);
       }
     });
-    
-    return true; // Async response
+    return true;
   } 
   
   else if (request.action === "translate_outgoing") {
@@ -42,15 +39,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     const prompt = `You are a professional business translator and editor. Translate the following Banglish (Bengali written in English letters or Latin script) or Bengali text into ${toneInstruction}. Output ONLY the translated English sentence(s). Do not add explanations, notes, or quotation marks:\n\n${request.text}`;
     
-    translateWithGeminiWaterfall(prompt, (geminiRes) => {
+    callGeminiWaterfall({ contents: [{ parts: [{ text: prompt }] }] }, (geminiRes) => {
       if (geminiRes && geminiRes.success) {
         sendResponse(geminiRes);
       } else {
-        // Fallback to Google Translate
         fallbackGoogleTranslate(request.text, 'en', sendResponse);
       }
     });
-    return true; // Async response
+    return true;
+  }
+
+  else if (request.action === "ai_chat") {
+    const contents = request.messages || [{ role: 'user', parts: [{ text: request.text }] }];
+    const payload = {
+      contents: contents,
+      systemInstruction: {
+        parts: [{ text: "You are a helpful, intelligent, polite AI assistant created by Rifat for the Chat Translator extension. You can converse fluently in English, Bengali (বাংলা), and Banglish. Answer questions accurately, clearly, and concisely. You can answer general knowledge questions, write emails, generate ideas, or translate. If asked who developed you, answer that you were developed by Rifat." }]
+      }
+    };
+
+    callGeminiWaterfall(payload, (geminiRes) => {
+      sendResponse(geminiRes);
+    });
+    return true;
   }
 });
 
@@ -72,10 +83,10 @@ function fallbackGoogleTranslate(text, targetLang, sendResponse) {
     });
 }
 
-// Waterfall across multiple Gemini models to automatically bypass rate limits / quotas
-function translateWithGeminiWaterfall(prompt, sendResponse, modelIndex = 0) {
+// Waterfall across multiple Gemini models
+function callGeminiWaterfall(payload, sendResponse, modelIndex = 0) {
   if (modelIndex >= MODELS.length) {
-    sendResponse({ success: false, error: "All AI models reached quota. Using fallback." });
+    sendResponse({ success: false, error: "All AI models reached quota. Please try again shortly." });
     return;
   }
 
@@ -90,20 +101,15 @@ function translateWithGeminiWaterfall(prompt, sendResponse, modelIndex = 0) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
+      body: JSON.stringify(payload)
     })
     .then(response => response.json())
     .then(data => {
       if (data.error) {
-        console.warn(`Model ${model} returned error:`, data.error.message);
-        // If quota exceeded (429) or not found (404), try next model immediately
+        console.warn(`Model ${model} error:`, data.error.message);
         if (data.error.code === 429 || data.error.code === 404 || data.error.status === 'RESOURCE_EXHAUSTED') {
-          console.log(`Switching from ${model} to next model in waterfall...`);
-          translateWithGeminiWaterfall(prompt, sendResponse, modelIndex + 1);
+          console.log(`Switching from ${model} to next model...`);
+          callGeminiWaterfall(payload, sendResponse, modelIndex + 1);
           return;
         }
         sendResponse({ success: false, error: data.error.message });
@@ -113,15 +119,15 @@ function translateWithGeminiWaterfall(prompt, sendResponse, modelIndex = 0) {
         if (textPart && textPart.text) {
           sendResponse({ success: true, text: textPart.text.trim() });
         } else {
-          translateWithGeminiWaterfall(prompt, sendResponse, modelIndex + 1);
+          callGeminiWaterfall(payload, sendResponse, modelIndex + 1);
         }
       } else {
-        translateWithGeminiWaterfall(prompt, sendResponse, modelIndex + 1);
+        callGeminiWaterfall(payload, sendResponse, modelIndex + 1);
       }
     })
     .catch(error => {
       console.warn(`Model ${model} request failed:`, error);
-      translateWithGeminiWaterfall(prompt, sendResponse, modelIndex + 1);
+      callGeminiWaterfall(payload, sendResponse, modelIndex + 1);
     });
   });
 }

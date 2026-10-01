@@ -29,23 +29,24 @@
     }
 
     body {
-      width: 380px;
-      min-height: 530px;
+      width: 400px;
+      height: 570px;
       background-color: var(--bg-primary);
       color: var(--text-main);
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     /* Header */
     .header {
-      padding: 16px 18px 12px;
+      padding: 14px 18px 12px;
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
 
     .brand {
@@ -102,14 +103,15 @@
     .tabs {
       display: flex;
       background: var(--bg-secondary);
-      padding: 0 16px;
-      gap: 8px;
+      padding: 0 14px;
+      gap: 4px;
       border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px 0;
+      padding: 9px 0;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -137,11 +139,12 @@
 
     /* Content Area */
     .tab-content {
-      padding: 16px;
+      padding: 14px 16px;
       flex: 1;
       display: none;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      overflow-y: auto;
     }
 
     .tab-content.active {
@@ -180,7 +183,7 @@
       color: #34d399;
     }
 
-    /* Text Input */
+    /* Text Input in Quick Chat */
     .input-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -188,12 +191,12 @@
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     textarea {
       width: 100%;
-      height: 75px;
+      height: 70px;
       background: transparent;
       border: none;
       color: var(--text-main);
@@ -237,7 +240,7 @@
       background: var(--accent-gradient);
       color: white;
       border: none;
-      padding: 10px;
+      padding: 9px;
       border-radius: 10px;
       font-size: 13px;
       font-weight: 600;
@@ -255,21 +258,17 @@
       transform: translateY(-1px);
     }
 
-    .translate-action-btn:active {
-      transform: translateY(0);
-    }
-
     /* Output Card */
     .output-card {
       background: #111a2e;
       border: 1px solid rgba(16, 185, 129, 0.25);
       border-radius: 12px;
-      padding: 12px;
-      min-height: 85px;
+      padding: 11px;
+      min-height: 80px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
     }
 
     .output-text {
@@ -284,7 +283,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 6px;
+      padding-top: 4px;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -300,7 +299,7 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-main);
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 500;
@@ -310,6 +309,210 @@
 
     .copy-btn:hover {
       background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ----------------- AI CHATBOT TAB ----------------- */
+    #aiChatTab {
+      padding: 10px 14px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+    }
+
+    #aiChatTab.active {
+      display: flex;
+    }
+
+    .chat-messages-container {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+      min-height: 290px;
+      max-height: 335px;
+    }
+
+    .chat-messages-container::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .chat-bubble {
+      max-width: 85%;
+      padding: 9px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      word-break: break-word;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--accent-gradient);
+      color: white;
+      border-bottom-right-radius: 3px;
+    }
+
+    .chat-bubble.ai {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: #e2e8f0;
+      border-bottom-left-radius: 3px;
+    }
+
+    .chat-bubble.ai strong {
+      color: #34d399;
+    }
+
+    .welcome-card {
+      background: rgba(19, 27, 46, 0.8);
+      border: 1px dashed rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .welcome-card h3 {
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #34d399;
+    }
+
+    .welcome-card p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .quick-prompts {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .prompt-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .prompt-pill:hover {
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    /* Typing Dots */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-radius: 14px;
+      align-self: flex-start;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #94a3b8;
+      animation: bounce 1.3s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-5px); }
+    }
+
+    /* Chat Input Bar */
+    .chat-input-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 6px 8px 6px 12px;
+      margin-top: auto;
+    }
+
+    .chat-input-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 12.5px;
+      outline: none;
+    }
+
+    .chat-input-field::placeholder {
+      color: var(--text-dim);
+    }
+
+    .chat-clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+
+    .chat-clear-btn:hover {
+      color: #f87171;
+    }
+
+    .chat-send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     /* Guide Tab */
@@ -412,13 +615,14 @@
     /* Footer */
     .footer {
       margin-top: auto;
-      padding: 12px 16px;
+      padding: 10px 16px;
       background: var(--bg-secondary);
       border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
+      flex-shrink: 0;
     }
 
     .footer-author {
@@ -454,13 +658,14 @@
 
   <!-- Navigation Tabs -->
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="chat">💬 Quick Chat</button>
+    <button class="tab-btn active" data-tab="translate">🌐 Translate</button>
+    <button class="tab-btn" data-tab="aiChat">🤖 AI Chat</button>
     <button class="tab-btn" data-tab="guide">⚡ Shortcuts</button>
     <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
   </nav>
 
-  <!-- TAB 1: Quick Chat / Translation -->
-  <main id="chatTab" class="tab-content active">
+  <!-- TAB 1: Quick Translate -->
+  <main id="translateTab" class="tab-content active">
     <!-- Tone Chips -->
     <div class="tone-selector">
       <button class="tone-chip active" data-tone="professional">💼 Professional</button>
@@ -493,7 +698,30 @@
     </div>
   </main>
 
-  <!-- TAB 2: Guide & Shortcuts -->
+  <!-- TAB 2: AI Chatbot (ChatGPT Style) -->
+  <section id="aiChatTab" class="tab-content">
+    <div class="chat-messages-container" id="chatFeed">
+      <!-- Greeting Card -->
+      <div class="welcome-card" id="chatWelcomeCard">
+        <h3>🤖 Rifat's AI Assistant</h3>
+        <p>Ask anything in English, বাংলা, or Banglish! I can answer questions, craft replies, or write emails.</p>
+        <div class="quick-prompts">
+          <div class="prompt-pill" data-prompt="Kaj ta complete kore client k ekta professional update email likhe dao">📧 Client update email draft koro</div>
+          <div class="prompt-pill" data-prompt="Client meeting late hobe, polite vabe ekta apology message likhe dao">💬 Late hobar polite message</div>
+          <div class="prompt-pill" data-prompt="Freelance client k kivabe friendly and professional reply deya jay?">💡 Client reply best practices</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" class="chat-input-field" placeholder="Ask AI anything... (Press Enter)">
+      <button class="chat-clear-btn" id="chatResetBtn" title="Clear conversation">🗑️</button>
+      <button class="chat-send-btn" id="chatSendBtn" title="Send message">➤</button>
+    </div>
+  </section>
+
+  <!-- TAB 3: Guide & Shortcuts -->
   <section id="guideTab" class="tab-content">
     <div class="guide-card">
       <div class="guide-icon">⌨️</div>
@@ -523,7 +751,7 @@
     </div>
   </section>
 
-  <!-- TAB 3: Settings -->
+  <!-- TAB 4: Settings -->
   <section id="settingsTab" class="tab-content">
     <div class="settings-group">
       <label for="apiKey">Gemini API Key</label>
@@ -551,7 +779,7 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-author">Developed by <span>Rifat</span></div>
-    <div class="footer-version">v2.0 • AI Powered</div>
+    <div class="footer-version">v2.1 • AI Assistant</div>
   </footer>
 
   <script src="popup.js"></script>
