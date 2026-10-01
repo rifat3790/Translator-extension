@@ -31,6 +31,8 @@ class TranslatorHUD:
         self.root = None
         self.current_window = None
         self.hide_timer_id = None
+        self.dashboard = None
+        self.floating_widget = None
         
         # Start GUI thread
         self.gui_thread = threading.Thread(target=self._run_gui_loop, daemon=True)
@@ -59,13 +61,41 @@ class TranslatorHUD:
                     self._render_toast(item)
                 elif msg_type == "card":
                     self._render_card(item)
+                elif msg_type == "open_dashboard":
+                    self._render_dashboard()
+                elif msg_type == "show_widget":
+                    self._render_widget(item)
+                elif msg_type == "toggle_widget":
+                    self._toggle_widget()
                 elif msg_type == "close":
                     self._close_window()
         except Exception as e:
             print(f"HUD Queue error: {e}")
             
         if self.root:
-            self.root.after(100, self._check_queue)
+            self.root.after(80, self._check_queue)
+
+    def _render_dashboard(self):
+        from dashboard import dashboard
+        dashboard.show()
+
+    def _render_widget(self, item):
+        from floating_widget import FloatingWidget
+        if not self.floating_widget:
+            self.floating_widget = FloatingWidget(
+                on_open_dashboard=self.open_dashboard,
+                on_outgoing_translate=item.get("on_outgoing"),
+                on_incoming_translate=item.get("on_incoming")
+            )
+        self.floating_widget.show(self.root)
+
+    def _toggle_widget(self):
+        if self.floating_widget and self.floating_widget.win and self.floating_widget.win.winfo_exists():
+            if self.floating_widget.win.state() == "normal":
+                self.floating_widget.win.withdraw()
+            else:
+                self.floating_widget.win.deiconify()
+                self.floating_widget.win.lift()
 
     def _close_window(self):
         if self.current_window:
@@ -194,13 +224,18 @@ class TranslatorHUD:
             "duration": duration
         })
 
-    def show_card(self, title, text, duration=5000):
+    def open_dashboard(self):
+        self.msg_queue.put({"type": "open_dashboard"})
+
+    def show_floating_widget(self, on_outgoing=None, on_incoming=None):
         self.msg_queue.put({
-            "type": "card",
-            "title": title,
-            "text": text,
-            "duration": duration
+            "type": "show_widget",
+            "on_outgoing": on_outgoing,
+            "on_incoming": on_incoming
         })
+
+    def toggle_floating_widget(self):
+        self.msg_queue.put({"type": "toggle_widget"})
 
 # Global singleton
 hud = TranslatorHUD()

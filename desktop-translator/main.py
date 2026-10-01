@@ -181,20 +181,34 @@ def _do_incoming_translation(target_hwnd):
         
     release_all_modifiers()
     
+    # Check if text is ALREADY in clipboard (e.g. user right-clicked -> Copy text)
+    existing_clip = ""
+    try:
+        existing_clip = pyperclip.paste().strip()
+    except Exception:
+        pass
+        
+    # Also attempt Ctrl+C in case user drag-selected text with mouse
     if target_hwnd:
         user32.SetForegroundWindow(target_hwnd)
         time.sleep(0.02)
         
-    pyperclip.copy("")
     send_ctrl_key(VK_C)
     time.sleep(0.06)
-    copied = pyperclip.paste()
+    new_clip = ""
+    try:
+        new_clip = pyperclip.paste().strip()
+    except Exception:
+        pass
     
-    text_to_translate = copied.strip()
+    # Use newly copied text or existing copied message
+    text_to_translate = new_clip if new_clip else existing_clip
     if not text_to_translate:
-        hud.show_toast("Chat Translator AI", "Select an incoming message first, then press Alt+B", is_success=False)
+        hud.show_toast("Chat Translator AI", "Copy (Ctrl+C) any message or select text, then press Alt+B", is_success=False)
         return
         
+    hud.show_toast("⏳ Translating to বাংলা...", "Connecting to Gemini AI...", is_success=True, duration=1500)
+    
     bengali_text = ai_engine.translate_incoming(text_to_translate)
     if not bengali_text:
         hud.show_toast("Translation Error", "Could not translate to Bengali.", is_success=False)
@@ -211,7 +225,7 @@ def _do_incoming_translation(target_hwnd):
         pass
         
     # Show dark-mode card HUD
-    hud.show_card("🌐 Bengali Translation (বাংলা)", bengali_text, duration=6000)
+    hud.show_card("🌐 Bengali Translation (বাংলা)", bengali_text, duration=8000)
 
 # ----------------- SYSTEM TRAY ICON -----------------
 def create_tray_image():
@@ -222,28 +236,16 @@ def create_tray_image():
     d.ellipse((26, 26, 38, 38), fill="#0b0f19")
     return img
 
-def setup_tray():
-    import pystray
-    from pystray import MenuItem as item
+    def open_dashboard_gui(icon=None, item=None):
+        hud.open_dashboard()
 
-    def on_tone_click(tone_name):
-        def _set(icon, item):
-            save_tone(tone_name)
-            hud.show_toast("Tone Changed", f"Active tone: {tone_name.capitalize()}", is_success=True)
-        return _set
-
-    def is_tone_checked(tone_name):
-        return lambda item: CURRENT_TONE == tone_name
-
-    def open_config(icon, item):
-        os.system(f'notepad.exe "{CONFIG_PATH}"')
-
-    def exit_app(icon, item):
-        icon.stop()
-        os._exit(0)
+    def toggle_widget_gui(icon=None, item=None):
+        hud.toggle_floating_widget()
 
     menu = (
-        item("✨ Chat Translator AI (Active)", lambda: None, enabled=False),
+        item("✨ Open AI Dashboard & Translator", open_dashboard_gui, default=True),
+        item("🔘 Toggle Floating Translate Button", toggle_widget_gui),
+        item("---", None),
         item("🌐 Outgoing: Ctrl+Space / Alt+T", lambda: None, enabled=False),
         item("🇧🇩 Incoming: Alt+B / Ctrl+Shift+B", lambda: None, enabled=False),
         item("---", None),
@@ -251,7 +253,7 @@ def setup_tray():
         item("✨ Tone: Friendly", on_tone_click("casual"), checked=is_tone_checked("casual")),
         item("👔 Tone: Executive", on_tone_click("executive"), checked=is_tone_checked("executive")),
         item("---", None),
-        item("⚙️ Settings (Edit API Key)", open_config),
+        item("⚙️ Settings (Edit Config)", open_config),
         item("👨‍💻 Developer: Md. Rifayet Hossen (Rifat)", lambda: None, enabled=False),
         item("---", None),
         item("❌ Exit", exit_app)
@@ -291,9 +293,15 @@ def main():
     # Show startup welcome toast
     hud.show_toast(
         "Chat Translator AI Started", 
-        "Global Hotkeys Active! Press Ctrl+Space or Alt+T to translate.",
+        "Global Hotkeys & Floating Widget Active! Press Ctrl+Space or Alt+T.",
         is_success=True,
         duration=3000
+    )
+
+    # Show on-screen floating widget
+    hud.show_floating_widget(
+        on_outgoing=handle_outgoing_translation,
+        on_incoming=handle_incoming_translation
     )
 
     # Launch System Tray
