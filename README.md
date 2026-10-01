@@ -84,6 +84,7 @@ Follow these simple steps to install the extension in Google Chrome:
 
 ## ⌨️ Keyboard Shortcuts & Usage
 
+### 🌐 Chrome Extension (WhatsApp Web & Telegram Web)
 | Action | How to Trigger | Description |
 | :--- | :--- | :--- |
 | **Outgoing English** | `Ctrl + Space` | Converts Banglish/Bengali in compose box to Professional English. |
@@ -91,18 +92,35 @@ Follow these simple steps to install the extension in Google Chrome:
 | **Quick Toggle** | `Double-Click` | Double-click any message bubble to toggle Bengali translation. |
 | **Popup Translate** | `Ctrl + Enter` | Translates text inside the extension popup quick chat. |
 
+### 🖥️ Windows Desktop Edition (Telegram Desktop, WhatsApp Desktop, Word, etc.)
+| Action | How to Trigger | Description |
+| :--- | :--- | :--- |
+| **Outgoing English** | `Ctrl + Space` / `Alt + T` | Converts Banglish/Bengali to Professional English & auto-replaces anywhere! |
+| **Incoming Bengali** | Click `🌐 অনুবাদ` / `Alt + B` | Translates copied/selected message to natural Bengali with floating card. |
+| **Floating Assistant** | Always on Screen | Draggable floating bar with `🌐 অনুবাদ`, `✨ English`, and `🤖 AI Chat`. |
+| **Open AI Dashboard** | Click Tray Icon / `🤖` | Opens the full ChatGPT-style desktop AI assistant and translator. |
+
 ---
 
 ## 🏗️ Project Architecture
 
 ```
 Translator extension/
-├── manifest.json       # Chrome Extension Manifest V3 configuration
-├── background.js      # Service worker: Multi-model AI waterfall & API calls
-├── content.js         # DOM observer & Lexical/React event synthesizer
-├── popup.html         # Modern glassmorphism dashboard UI
-├── popup.js           # Popup controller, tone selector, and clipboard manager
-└── README.md          # Complete project documentation
+├── manifest.json            # Chrome Extension Manifest V3 configuration
+├── background.js           # Multi-model AI waterfall & service worker
+├── content.js              # DOM observer & Lexical/React synthesizer
+├── popup.html              # Modern glassmorphism dashboard UI
+├── popup.js                # Popup controller, tone selector & AI chat
+├── desktop-translator/     # 🖥️ Windows Global Desktop Edition
+│   ├── ChatTranslatorAI.exe # Standalone double-clickable executable
+│   ├── main.py             # Global keyboard hooks & tray controller
+│   ├── dashboard.py        # Desktop AI Assistant & Translator GUI
+│   ├── floating_widget.py  # On-screen draggable floating translate button
+│   ├── ai_engine.py        # AI waterfall translation engine
+│   ├── hud.py              # Floating card & toast notifications
+│   ├── run_translator.bat  # One-click batch launcher
+│   └── start_silent.vbs    # Background silent launcher
+└── README.md               # Complete project documentation
 ```
 
 ### Technical Highlights
