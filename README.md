@@ -116,10 +116,16 @@ If you prefer using your own personal API key:
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Author & Developer
 
-**Developed with ❤️ by Rifat**
-- GitHub: [@rifat3790](https://github.com/rifat3790)
+**Md. Rifayet Hossen (Rifat)**  
+*Professional Shopify Developer & Web Specialist*  
+Creator of **Chat Translator AI**
+
+- 📱 **WhatsApp / Phone:** [+880 1952321390](https://wa.me/8801952321390) (`01952321390`)
+- ✉️ **Email:** [mdrifayethossen@gmail.com](mailto:mdrifayethossen@gmail.com)
+- 🌐 **Facebook:** [facebook.com/Rifayet221](https://www.facebook.com/Rifayet221/)
+- 💻 **GitHub:** [@rifat3790](https://github.com/rifat3790)
 
 ---
 
