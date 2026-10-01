@@ -1,0 +1,18 @@
+# Local configuration & secrets
+desktop-translator/config.json
+
+# Binaries
+*.exe
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# PyInstaller build outputs
+build/
+dist/
+*.spec
+.venv/
+.uv/

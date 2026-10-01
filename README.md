@@ -44,6 +44,13 @@
   4. **Universal Fallback**: Free Google Translate Engine
 - If any model reaches its rate limit, it cascades seamlessly to the next engine in less than 200ms.
 
+### 6. 🖥️ Windows Global Desktop Edition (Works Everywhere!)
+- Need translation outside the browser? Use the included **Desktop Assistant** located in `desktop-translator/`!
+- Works globally in **WhatsApp Desktop (.exe)**, **Telegram Desktop**, **MS Word**, **Notepad**, **Discord**, etc.
+  - **`Alt + T`** *(or `Ctrl + Shift + Space`)*: Translates Banglish to Professional English and **auto-replaces** in place!
+  - **`Alt + B`** *(or `Ctrl + Shift + B`)*: Select any incoming English message and press `Alt + B` to see a floating **Bengali Translation Card**!
+- Includes a standalone **`ChatTranslatorAI.exe`** and System Tray menu with live tone switching.
+
 ---
 
 ## 🛠️ Installation Guide

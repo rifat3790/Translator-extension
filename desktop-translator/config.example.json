@@ -1,0 +1,9 @@
+{
+  "api_key": "YOUR_GEMINI_API_KEY_HERE",
+  "tone": "professional",
+  "hud_duration_seconds": 4,
+  "hotkeys": {
+    "outgoing": ["alt+t", "ctrl+shift+space"],
+    "incoming": ["alt+b", "ctrl+shift+b"]
+  }
+}
