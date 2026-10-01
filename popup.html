@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chat Translator AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #131b2e;
+      --bg-card: #1c2640;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --accent-blue: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    body {
+      width: 380px;
+      min-height: 530px;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 18px 12px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--bg-secondary);
+      padding: 0 16px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: #34d399;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #10b981;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Content Area */
+    .tab-content {
+      padding: 16px;
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Tone Pills */
+    .tone-selector {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .tone-selector::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tone-chip {
+      padding: 5px 10px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .tone-chip.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    /* Text Input */
+    .input-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 75px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.4;
+      resize: none;
+      outline: none;
+    }
+
+    textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .char-count {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .clear-btn:hover {
+      color: var(--text-muted);
+    }
+
+    /* Translate Button */
+    .translate-action-btn {
+      background: var(--accent-gradient);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s;
+    }
+
+    .translate-action-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .translate-action-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Output Card */
+    .output-card {
+      background: #111a2e;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 85px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .output-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      word-break: break-word;
+      user-select: text;
+    }
+
+    .output-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .output-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #34d399;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Guide Tab */
+    .guide-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .guide-icon {
+      font-size: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .guide-info h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: #f1f5f9;
+    }
+
+    .guide-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .guide-badge {
+      display: inline-block;
+      margin-top: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: monospace;
+    }
+
+    /* Settings Tab */
+    .settings-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .settings-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .key-input-wrapper {
+      display: flex;
+      gap: 6px;
+    }
+
+    .key-input-wrapper input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .toggle-visibility-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .save-key-btn {
+      background: var(--accent-gradient);
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: auto;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .footer-author {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .footer-author span {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .footer-version {
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">✨</div>
+      <div class="brand-text">
+        <h1>Chat Translator AI</h1>
+        <p>WhatsApp & Telegram Assistant</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      Active
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="chat">💬 Quick Chat</button>
+    <button class="tab-btn" data-tab="guide">⚡ Shortcuts</button>
+    <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+  </nav>
+
+  <!-- TAB 1: Quick Chat / Translation -->
+  <main id="chatTab" class="tab-content active">
+    <!-- Tone Chips -->
+    <div class="tone-selector">
+      <button class="tone-chip active" data-tone="professional">💼 Professional</button>
+      <button class="tone-chip" data-tone="casual">✨ Friendly</button>
+      <button class="tone-chip" data-tone="executive">👔 Formal Executive</button>
+      <button class="tone-chip" data-tone="bangla">🇧🇩 Translate to বাংলা</button>
+    </div>
+
+    <!-- Input Card -->
+    <div class="input-card">
+      <textarea id="inputText" placeholder="Type Banglish, Bengali, or English here... (e.g. 'thik ache ami kaj gula kore update janabo')"></textarea>
+      <div class="input-footer">
+        <span class="char-count" id="charCount">0 characters</span>
+        <button class="clear-btn" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <button class="translate-action-btn" id="popupTranslateBtn">
+      <span>✨ Translate Now</span>
+    </button>
+
+    <!-- Output Card -->
+    <div class="output-card">
+      <div class="output-text" id="outputText">Your translated message will appear here...</div>
+      <div class="output-actions">
+        <span class="output-badge" id="outputBadge">English</span>
+        <button class="copy-btn" id="copyBtn">📋 Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB 2: Guide & Shortcuts -->
+  <section id="guideTab" class="tab-content">
+    <div class="guide-card">
+      <div class="guide-icon">⌨️</div>
+      <div class="guide-info">
+        <h3>Instant Outgoing Translation</h3>
+        <p>Type Banglish or Bengali in WhatsApp or Telegram compose box, then press shortcut.</p>
+        <span class="guide-badge">Ctrl + Space</span>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-icon">🌐</div>
+      <div class="guide-info">
+        <h3>Incoming Message Translation</h3>
+        <p>Click the mini button below any chat message to instantly see natural Bengali.</p>
+        <span class="guide-badge">🌐 অনুবাদ Button</span>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-icon">🖱️</div>
+      <div class="guide-info">
+        <h3>Double Click Shortcut</h3>
+        <p>Double-click anywhere on a message bubble to translate it into Bengali.</p>
+        <span class="guide-badge">Double Click</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: Settings -->
+  <section id="settingsTab" class="tab-content">
+    <div class="settings-group">
+      <label for="apiKey">Gemini API Key</label>
+      <div class="key-input-wrapper">
+        <input type="password" id="apiKey" placeholder="Pre-configured (Ready to use)">
+        <button class="toggle-visibility-btn" id="toggleKeyBtn">👁️</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+        A high-performance Gemini 3.5 AI key is already pre-configured for you. You can optionally replace it with your own key.
+      </p>
+      <button class="save-key-btn" id="saveKeyBtn">Save API Key</button>
+    </div>
+
+    <div class="settings-group">
+      <label>AI Model Engine</label>
+      <p style="font-size: 11px; color: #34d399; font-weight: 600;">
+        ⚡ Gemini 3.5 Flash-Lite + Auto Fallback Waterfall
+      </p>
+      <p style="font-size: 10px; color: var(--text-dim);">
+        Automatically bypasses quota limits with intelligent multi-model routing.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-author">Developed by <span>Rifat</span></div>
+    <div class="footer-version">v2.0 • AI Powered</div>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
