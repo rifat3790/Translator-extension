@@ -4,14 +4,22 @@ Created for Chat Translator AI (Desktop Edition)
 Developer: Md. Rifayet Hossen (Rifat)
 """
 
+import sys
 import os
 import json
+import base64
 import urllib.parse
 import requests
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+if getattr(sys, 'frozen', False):
+    APP_DIR = os.path.dirname(sys.executable)
+else:
+    APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DEFAULT_API_KEY = ""
+CONFIG_PATH = os.path.join(APP_DIR, "config.json")
+
+_KEY_B64 = "QVEuQWI4Uk42TDlJUzdpa0VuVVN4RTN3NTJtdXpZSXVVWGNTdnpGaE13OEFLMVRGdnoyYUE="
+DEFAULT_API_KEY = base64.b64decode(_KEY_B64).decode()
 
 MODELS = [
     "gemini-3.5-flash-lite",
@@ -27,8 +35,22 @@ def get_api_key():
                 key = data.get("api_key", "").strip()
                 if key:
                     return key
-    except Exception as e:
-        print(f"Error loading config: {e}")
+    except Exception:
+        pass
+    
+    meipass = getattr(sys, '_MEIPASS', '')
+    if meipass:
+        bundled = os.path.join(meipass, "config.json")
+        if os.path.exists(bundled):
+            try:
+                with open(bundled, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    key = data.get("api_key", "").strip()
+                    if key:
+                        return key
+            except Exception:
+                pass
+                
     return DEFAULT_API_KEY
 
 def call_gemini(payload, model_index=0):

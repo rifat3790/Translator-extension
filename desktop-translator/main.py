@@ -1,6 +1,6 @@
 """
 Chat Translator AI - Windows Desktop Global Edition
-Developer: Md. Rifayet Hossen (Rifat)
+Developer: Md. Rifayet Hossen (Rifat) - Shopify Developer
 Works across WhatsApp Desktop, Telegram Desktop, Word, Notepad, Discord, etc.
 """
 
@@ -25,7 +25,12 @@ VK_V = 0x56
 VK_A = 0x41
 KEYEVENTF_KEYUP = 0x0002
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+if getattr(sys, 'frozen', False):
+    APP_DIR = os.path.dirname(sys.executable)
+else:
+    APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 
 CURRENT_TONE = "professional"
 
@@ -53,61 +58,60 @@ def save_tone(tone):
     except Exception:
         pass
 
-def send_key_combo(vk_modifier, vk_key):
-    user32.keybd_event(vk_modifier, 0, 0, 0)
-    user32.keybd_event(vk_key, 0, 0, 0)
-    time.sleep(0.04)
-    user32.keybd_event(vk_key, 0, KEYEVENTF_KEYUP, 0)
-    user32.keybd_event(vk_modifier, 0, KEYEVENTF_KEYUP, 0)
+def release_all_modifiers():
+    # Release any stuck modifiers in Windows
+    for vk in [0x11, 0x12, 0x10, 0x20, 0x54, 0x42]: # Ctrl, Alt, Shift, Space, T, B
+        user32.keybd_event(vk, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.02)
 
-def copy_selected_text():
-    # Save previous clipboard
-    prev_clipboard = ""
-    try:
-        prev_clipboard = pyperclip.paste()
-    except Exception:
-        pass
-    
-    # Empty clipboard and simulate Ctrl+C
-    pyperclip.copy("")
-    time.sleep(0.05)
-    send_key_combo(VK_CONTROL, VK_C)
-    
-    # Wait up to 300ms for clipboard update
-    copied = ""
-    for _ in range(6):
-        time.sleep(0.05)
-        try:
-            copied = pyperclip.paste()
-            if copied and copied.strip():
-                break
-        except Exception:
-            pass
-            
-    return copied, prev_clipboard
+def send_ctrl_key(vk_char):
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    time.sleep(0.02)
+    user32.keybd_event(vk_char, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(vk_char, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.02)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.03)
 
 # ----------------- OUTGOING TRANSLATION HANDLER -----------------
 def handle_outgoing_translation():
-    threading.Thread(target=_do_outgoing_translation, daemon=True).start()
+    target_hwnd = user32.GetForegroundWindow()
+    threading.Thread(target=_do_outgoing_translation, args=(target_hwnd,), daemon=True).start()
 
-def _do_outgoing_translation():
-    time.sleep(0.12) # Let user key release settle
+def _do_outgoing_translation(target_hwnd):
+    # Wait for user to release physical hotkeys
+    start_t = time.time()
+    while time.time() - start_t < 0.35:
+        if not (keyboard.is_pressed('alt') or keyboard.is_pressed('ctrl') or keyboard.is_pressed('shift') or keyboard.is_pressed('space') or keyboard.is_pressed('t')):
+            break
+        time.sleep(0.02)
     
-    copied, prev_clip = copy_selected_text()
+    release_all_modifiers()
     
-    # If nothing was selected, try selecting all in current box (Ctrl+A then Ctrl+C)
+    if target_hwnd:
+        user32.SetForegroundWindow(target_hwnd)
+        time.sleep(0.02)
+
+    # 1. Try to copy currently selected text
+    pyperclip.copy("")
+    send_ctrl_key(VK_C)
+    time.sleep(0.06)
+    copied = pyperclip.paste()
+    
+    # 2. If nothing was selected, select all in current input (Ctrl+A) and copy (Ctrl+C)
     if not copied or not copied.strip():
-        send_key_combo(VK_CONTROL, VK_A)
+        send_ctrl_key(VK_A)
+        time.sleep(0.05)
+        send_ctrl_key(VK_C)
         time.sleep(0.06)
-        copied, _ = copy_selected_text()
+        copied = pyperclip.paste()
     
     text_to_translate = copied.strip()
     if not text_to_translate:
-        hud.show_toast("Chat Translator AI", "No text selected to translate", is_success=False)
         return
     
-    hud.show_toast("⏳ AI Translating...", f"Converting to {CURRENT_TONE.capitalize()} English...", is_success=True, duration=2000)
-    
+    # Translate (do not show any toast yet to preserve window focus)
     translated = ai_engine.translate_outgoing(text_to_translate, tone=CURRENT_TONE)
     if not translated:
         hud.show_toast("Translation Error", "Could not translate text.", is_success=False)
@@ -115,26 +119,59 @@ def _do_outgoing_translation():
     
     # Put translated text in clipboard and paste (Ctrl+V)
     pyperclip.copy(translated)
-    time.sleep(0.08)
-    send_key_combo(VK_CONTROL, VK_V)
+    time.sleep(0.04)
     
-    hud.show_toast("✓ Translated to English", f"Replaced with {CURRENT_TONE.capitalize()} English", is_success=True, duration=2200)
+    if target_hwnd:
+        user32.SetForegroundWindow(target_hwnd)
+        time.sleep(0.02)
+        
+    send_ctrl_key(VK_V)
+    time.sleep(0.03)
+    
+    # Play subtle confirmation sound
+    try:
+        import winsound
+        winsound.MessageBeep(winsound.MB_OK)
+    except Exception:
+        pass
+    
+    # Show success toast AFTER replacement is complete
+    hud.show_toast(
+        "✓ Translated to English", 
+        f"Replaced with {CURRENT_TONE.capitalize()} English", 
+        is_success=True, 
+        duration=2000
+    )
 
 # ----------------- INCOMING TRANSLATION HANDLER -----------------
 def handle_incoming_translation():
-    threading.Thread(target=_do_incoming_translation, daemon=True).start()
+    target_hwnd = user32.GetForegroundWindow()
+    threading.Thread(target=_do_incoming_translation, args=(target_hwnd,), daemon=True).start()
 
-def _do_incoming_translation():
-    time.sleep(0.12) # Wait for key release
+def _do_incoming_translation(target_hwnd):
+    # Wait for hotkey release
+    start_t = time.time()
+    while time.time() - start_t < 0.35:
+        if not (keyboard.is_pressed('alt') or keyboard.is_pressed('ctrl') or keyboard.is_pressed('shift') or keyboard.is_pressed('b')):
+            break
+        time.sleep(0.02)
+        
+    release_all_modifiers()
     
-    copied, prev_clip = copy_selected_text()
+    if target_hwnd:
+        user32.SetForegroundWindow(target_hwnd)
+        time.sleep(0.02)
+        
+    pyperclip.copy("")
+    send_ctrl_key(VK_C)
+    time.sleep(0.06)
+    copied = pyperclip.paste()
+    
     text_to_translate = copied.strip()
     if not text_to_translate:
         hud.show_toast("Chat Translator AI", "Select an incoming message first, then press Alt+B", is_success=False)
         return
         
-    hud.show_toast("⏳ Translating to বাংলা...", "Connecting to Gemini AI...", is_success=True, duration=1500)
-    
     bengali_text = ai_engine.translate_incoming(text_to_translate)
     if not bengali_text:
         hud.show_toast("Translation Error", "Could not translate to Bengali.", is_success=False)
@@ -143,19 +180,22 @@ def _do_incoming_translation():
     # Copy to clipboard for easy reuse
     pyperclip.copy(bengali_text)
     
+    # Play subtle confirmation sound
+    try:
+        import winsound
+        winsound.MessageBeep(winsound.MB_OK)
+    except Exception:
+        pass
+        
     # Show dark-mode card HUD
     hud.show_card("🌐 Bengali Translation (বাংলা)", bengali_text, duration=6000)
 
 # ----------------- SYSTEM TRAY ICON -----------------
 def create_tray_image():
-    # Generate 64x64 emerald gradient icon with globe
     img = Image.new('RGBA', (64, 64), color=(0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    # Rounded badge background
     d.rounded_rectangle((4, 4, 60, 60), radius=16, fill="#0b0f19", outline="#10b981", width=3)
-    # Inner emerald accent
     d.ellipse((14, 14, 50, 50), fill="#10b981")
-    # Central dot
     d.ellipse((26, 26, 38, 38), fill="#0b0f19")
     return img
 
@@ -181,8 +221,8 @@ def setup_tray():
 
     menu = (
         item("✨ Chat Translator AI (Active)", lambda: None, enabled=False),
-        item("🌐 Outgoing English: Alt+T / Ctrl+Shift+Space", lambda: None, enabled=False),
-        item("🇧🇩 Incoming Bangla: Alt+B / Ctrl+Shift+B", lambda: None, enabled=False),
+        item("🌐 Outgoing: Ctrl+Space / Alt+T", lambda: None, enabled=False),
+        item("🇧🇩 Incoming: Alt+B / Ctrl+Shift+B", lambda: None, enabled=False),
         item("---", None),
         item("💼 Tone: Professional", on_tone_click("professional"), checked=is_tone_checked("professional")),
         item("✨ Tone: Friendly", on_tone_click("casual"), checked=is_tone_checked("casual")),
@@ -207,6 +247,7 @@ def main():
     print(" Developed by Md. Rifayet Hossen (Rifat) - Shopify Developer")
     print("=" * 60)
     print(" Hotkeys Active:")
+    print("   • Ctrl + Space      : Outgoing Banglish/Bengali -> English (Auto-replace)")
     print("   • Alt + T           : Outgoing Banglish/Bengali -> English (Auto-replace)")
     print("   • Ctrl+Shift+Space  : Outgoing Banglish/Bengali -> English (Auto-replace)")
     print("   • Alt + B           : Incoming English -> Bengali (বাংলা Floating Card)")
@@ -216,6 +257,7 @@ def main():
 
     # Register Global Hotkeys
     try:
+        keyboard.add_hotkey('ctrl+space', handle_outgoing_translation, suppress=True)
         keyboard.add_hotkey('alt+t', handle_outgoing_translation, suppress=True)
         keyboard.add_hotkey('ctrl+shift+space', handle_outgoing_translation, suppress=True)
         keyboard.add_hotkey('alt+b', handle_incoming_translation, suppress=True)
@@ -226,9 +268,9 @@ def main():
     # Show startup welcome toast
     hud.show_toast(
         "Chat Translator AI Started", 
-        "Global Hotkeys Active! Press Alt+T to translate & replace.",
+        "Global Hotkeys Active! Press Ctrl+Space or Alt+T to translate.",
         is_success=True,
-        duration=3500
+        duration=3000
     )
 
     # Launch System Tray
@@ -237,7 +279,6 @@ def main():
         tray.run()
     except Exception as e:
         print(f"Tray error: {e}")
-        # Keep alive if tray fails
         keyboard.wait()
 
 if __name__ == "__main__":

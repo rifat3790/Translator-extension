@@ -7,8 +7,23 @@ Developer: Md. Rifayet Hossen (Rifat)
 import threading
 import queue
 import time
+import ctypes
 import tkinter as tk
 from tkinter import ttk
+
+user32 = ctypes.windll.user32
+
+def _apply_non_activating(win):
+    try:
+        win.update_idletasks()
+        hwnd = win.winfo_id()
+        root_hwnd = user32.GetAncestor(hwnd, 2)
+        target = root_hwnd if root_hwnd else hwnd
+        style = user32.GetWindowLongW(target, -20)
+        # WS_EX_NOACTIVATE = 0x08000000, WS_EX_TOPMOST = 0x00000008
+        user32.SetWindowLongW(target, -20, style | 0x08000000 | 0x00000008)
+    except Exception:
+        pass
 
 class TranslatorHUD:
     def __init__(self):
@@ -92,6 +107,7 @@ class TranslatorHUD:
         x = screen_w - w - 25
         y = screen_h - h - 65
         win.geometry(f"+{x}+{y}")
+        _apply_non_activating(win)
         
         win.bind("<Button-1>", lambda e: self._close_window())
         frame.bind("<Button-1>", lambda e: self._close_window())
@@ -161,6 +177,7 @@ class TranslatorHUD:
         x = screen_w - w - 30
         y = screen_h - h - 70
         win.geometry(f"{w}x{h}+{x}+{y}")
+        _apply_non_activating(win)
         
         # Click to close
         win.bind("<Button-1>", lambda e: self._close_window())
